@@ -108,3 +108,48 @@ describe('Validação de produto', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('Movimentação de estoque', () => {
+  test('entrada soma na quantidade do produto', async () => {
+    const { body } = await criar({ quantidade: 5 });
+    const res = await request(app)
+      .post(`/produtos/${body.id}/entrada`)
+      .send({ quantidade: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.quantidade).toBe(8);
+  });
+
+  test('saída subtrai da quantidade do produto', async () => {
+    const { body } = await criar({ quantidade: 10 });
+    const res = await request(app)
+      .post(`/produtos/${body.id}/saida`)
+      .send({ quantidade: 4 });
+    expect(res.status).toBe(200);
+    expect(res.body.quantidade).toBe(6);
+  });
+
+  test('rejeita saída maior que o estoque e não altera a quantidade', async () => {
+    const { body } = await criar({ quantidade: 2 });
+    const res = await request(app)
+      .post(`/produtos/${body.id}/saida`)
+      .send({ quantidade: 5 });
+    expect(res.status).toBe(400);
+    const busca = await request(app).get(`/produtos/${body.id}`);
+    expect(busca.body.quantidade).toBe(2);
+  });
+
+  test('rejeita entrada com quantidade zero ou negativa', async () => {
+    const { body } = await criar();
+    const res = await request(app)
+      .post(`/produtos/${body.id}/entrada`)
+      .send({ quantidade: -3 });
+    expect(res.status).toBe(400);
+  });
+
+  test('retorna 404 para movimentação em produto inexistente', async () => {
+    const res = await request(app)
+      .post('/produtos/9999/entrada')
+      .send({ quantidade: 1 });
+    expect(res.status).toBe(404);
+  });
+});
