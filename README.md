@@ -14,13 +14,16 @@ com API REST própria, testes automatizados (TDD) e versionamento com Git.
 - Git
 
 ## Instalação
-git clone https://github.com/Helo0isa/estoque-api.git
-cd estoque-api
-npm install
+1 - git clone https://github.com/Helo0isa/estoque-api.git
+
+2 - cd estoque-api
+
+3 - npm install
 
 ## Execução
-npm start
-Acesse http://localhost:3000
+1 - npm start
+
+2 - Acesse http://localhost:3000
 
 ## Testes
 npm test
