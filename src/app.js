@@ -5,22 +5,27 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-app.post('/produtos', (req, res) => {
-  const { nome, categoria, preco, quantidade } = req.body;
-  if (!nome) {
-    return res.status(400).json({ erro: 'Nome é obrigatório' });
-  }
-  if (typeof preco !== 'number' || preco < 0) {
-    return res.status(400).json({ erro: 'Preço inválido' });
-  }
+function validarProduto({ nome, preco, quantidade }) {
+  if (!nome) return 'Nome é obrigatório';
+  if (typeof preco !== 'number' || preco < 0) return 'Preço inválido';
   if (quantidade !== undefined && (!Number.isInteger(quantidade) || quantidade < 0)) {
-    return res.status(400).json({ erro: 'Quantidade inválida' });
+    return 'Quantidade inválida';
   }
-  const qtd = quantidade || 0;
+  return null;
+}
+
+const buscarPorId = (id) => db.prepare('SELECT * FROM produtos WHERE id = ?').get(id);
+
+app.post('/produtos', (req, res) => {
+  const erro = validarProduto(req.body);
+  if (erro) return res.status(400).json({ erro });
+
+  const { nome, categoria, preco, quantidade } = req.body;
+  const qtd = quantidade ?? 0;
   const info = db
     .prepare('INSERT INTO produtos (nome, categoria, preco, quantidade) VALUES (?, ?, ?, ?)')
     .run(nome, categoria || null, preco, qtd);
-  res.status(201).json({ id: info.lastInsertRowid, nome, categoria, preco, quantidade: qtd });
+  res.status(201).json(buscarPorId(info.lastInsertRowid));
 });
 
 app.get('/produtos', (req, res) => {
@@ -28,25 +33,22 @@ app.get('/produtos', (req, res) => {
 });
 
 app.get('/produtos/:id', (req, res) => {
-  const produto = db.prepare('SELECT * FROM produtos WHERE id = ?').get(req.params.id);
+  const produto = buscarPorId(req.params.id);
   if (!produto) return res.status(404).json({ erro: 'Produto não encontrado' });
   res.json(produto);
 });
 
 app.put('/produtos/:id', (req, res) => {
-  const existe = db.prepare('SELECT id FROM produtos WHERE id = ?').get(req.params.id);
-  if (!existe) return res.status(404).json({ erro: 'Produto não encontrado' });
+  if (!buscarPorId(req.params.id)) {
+    return res.status(404).json({ erro: 'Produto não encontrado' });
+  }
+  const erro = validarProduto(req.body);
+  if (erro) return res.status(400).json({ erro });
+
   const { nome, categoria, preco, quantidade } = req.body;
-    if (!nome) return res.status(400).json({ erro: 'Nome é obrigatório' });
-  if (typeof preco !== 'number' || preco < 0) {
-    return res.status(400).json({ erro: 'Preço inválido' });
-  }
-  if (quantidade !== undefined && (!Number.isInteger(quantidade) || quantidade < 0)) {
-    return res.status(400).json({ erro: 'Quantidade inválida' });
-  }
   db.prepare('UPDATE produtos SET nome = ?, categoria = ?, preco = ?, quantidade = ? WHERE id = ?')
-    .run(nome, categoria || null, preco, quantidade, req.params.id);
-  res.json(db.prepare('SELECT * FROM produtos WHERE id = ?').get(req.params.id));
+    .run(nome, categoria || null, preco, quantidade ?? 0, req.params.id);
+  res.json(buscarPorId(req.params.id));
 });
 
 app.delete('/produtos/:id', (req, res) => {
