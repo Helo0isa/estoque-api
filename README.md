@@ -54,7 +54,6 @@ para cada etapa. Cada funcionalidade foi feita em uma branch e integrada por Pul
 - Heloisa Avelino Mazon
 - Filipe Henrique Ricci
 - Guilherme Avelino Betelli
-- Miguel Di-Tanno Viganó
 
 ----
 Análise e desenvolvimento de sistemas - Profº Ederaldo Luiz Ratz
