@@ -57,4 +57,35 @@ app.delete('/produtos/:id', (req, res) => {
   res.status(204).send();
 });
 
+app.post('/produtos/:id/entrada', (req, res) => {
+  const produto = buscarPorId(req.params.id);
+  if (!produto) return res.status(404).json({ erro: 'Produto não encontrado' });
+
+  const { quantidade } = req.body;
+  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+    return res.status(400).json({ erro: 'Quantidade deve ser um inteiro positivo' });
+  }
+
+  db.prepare('UPDATE produtos SET quantidade = ? WHERE id = ?')
+    .run(produto.quantidade + quantidade, produto.id);
+  res.json(buscarPorId(produto.id));
+});
+
+app.post('/produtos/:id/saida', (req, res) => {
+  const produto = buscarPorId(req.params.id);
+  if (!produto) return res.status(404).json({ erro: 'Produto não encontrado' });
+
+  const { quantidade } = req.body;
+  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+    return res.status(400).json({ erro: 'Quantidade deve ser um inteiro positivo' });
+  }
+  if (quantidade > produto.quantidade) {
+    return res.status(400).json({ erro: 'Estoque insuficiente' });
+  }
+
+  db.prepare('UPDATE produtos SET quantidade = ? WHERE id = ?')
+    .run(produto.quantidade - quantidade, produto.id);
+  res.json(buscarPorId(produto.id));
+});
+
 module.exports = app;
