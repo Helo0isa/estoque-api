@@ -22,6 +22,23 @@ function mostrarMensagem(texto, erro = false) {
   mostrarMensagem.timer = setTimeout(() => (el.hidden = true), 4000);
 }
 
+function perguntar(texto, pedirNumero = false) {
+  return new Promise((resolve) => {
+    const dlg = $('dialogo');
+    const input = $('dialogo-valor');
+    $('dialogo-texto').textContent = texto;
+    input.hidden = !pedirNumero;
+    input.value = '';
+    const fechar = (resultado) => {
+      dlg.close();
+      resolve(resultado);
+    };
+    $('dialogo-ok').onclick = () => fechar(pedirNumero ? Number(input.value) : true);
+    $('dialogo-cancelar').onclick = () => fechar(null);
+    dlg.showModal();
+  });
+}
+
 async function requisicao(url, opcoes = {}) {
   const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opcoes });
   if (res.status === 204) return null;
@@ -99,7 +116,7 @@ $('lista').addEventListener('click', async (e) => {
 
   try {
     if (acao === 'excluir') {
-      if (!confirm(`Excluir "${produto.nome}"?`)) return;
+      if (!(await perguntar(`Excluir "${produto.nome}"?`))) return;
       await requisicao(`${API}/${id}`, { method: 'DELETE' });
       mostrarMensagem('Produto excluído!');
       carregarProdutos();
@@ -112,9 +129,10 @@ $('lista').addEventListener('click', async (e) => {
       $('btn-salvar').textContent = 'Salvar alterações';
       $('btn-cancelar').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
+    } 
+    else {
       const texto = acao === 'entrada' ? 'entrada' : 'saída';
-      const valor = Number(prompt(`Quantidade de ${texto} para "${produto.nome}":`));
+      const valor = await perguntar(`Quantidade de ${texto} para "${produto.nome}":`, true);
       if (!valor) return;
       await requisicao(`${API}/${id}/${acao}`, {
         method: 'POST',

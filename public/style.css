@@ -60,3 +60,7 @@ th { background: #e5e7eb; }
 .mensagem { padding: 10px; border-radius: 4px; text-align: center; }
 .mensagem.ok { background: #d1fae5; color: #065f46; }
 .mensagem.erro { background: #fee2e2; color: #991b1b; }
+
+dialog { border: none; border-radius: 8px; padding: 16px; min-width: 280px; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+dialog input { width: 100%; margin-bottom: 12px; }
