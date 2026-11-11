@@ -81,3 +81,30 @@ describe('DELETE /produtos/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('Validação de produto', () => {
+  test('rejeita preço negativo no cadastro', async () => {
+    const res = await criar({ preco: -5 });
+    expect(res.status).toBe(400);
+  });
+
+  test('rejeita quantidade negativa no cadastro', async () => {
+    const res = await criar({ quantidade: -1 });
+    expect(res.status).toBe(400);
+  });
+
+  test('rejeita produto sem preço', async () => {
+    const res = await request(app)
+      .post('/produtos')
+      .send({ nome: 'Borracha', categoria: 'Papelaria', quantidade: 3 });
+    expect(res.status).toBe(400);
+  });
+
+  test('rejeita preço negativo na edição', async () => {
+    const { body } = await criar();
+    const res = await request(app)
+      .put(`/produtos/${body.id}`)
+      .send({ nome: 'Lápis', categoria: 'Papelaria', preco: -1, quantidade: 5 });
+    expect(res.status).toBe(400);
+  });
+});
